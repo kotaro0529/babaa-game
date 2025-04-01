@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>近所のババアゲーム</title>
+  <style>
+    body { margin: 0; background: #eee; }
+    canvas { display: block; margin: auto; background: #fff; border: 2px solid #333; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById(\"gameCanvas\");
+    const ctx = canvas.getContext(\"2d\");
+
+    let player = { x: 100, y: 300, width: 40, height: 40, color: \"blue\", vy: 0, jumping: false };
+    let baba = { x: 0, y: 300, width: 40, height: 40, color: \"pink\" };
+    let gravity = 1;
+    let floor = 300;
+    let obstacles = [];
+    let frame = 0;
+    let gameOver = false;
+
+    document.addEventListener(\"keydown\", (e) => {
+      if (e.code === \"Space\" && !player.jumping) {
+        player.vy = -15;
+        player.jumping = true;
+      }
+    });
+
+    function drawRect(obj) {
+      ctx.fillStyle = obj.color;
+      ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+    }
+
+    function createObstacle() {
+      obstacles.push({ x: 800, y: 320, width: 30, height: 30, color: \"gray\" });
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      player.y += player.vy;
+      player.vy += gravity;
+      if (player.y >= floor) {
+        player.y = floor;
+        player.jumping = false;
+      }
+
+      if (baba.x < player.x - 80) baba.x += 1.5;
+
+      if (frame % 120 === 0) createObstacle();
+
+      obstacles.forEach((ob) => {
+        ob.x -= 4;
+        drawRect(ob);
+        if (player.x < ob.x + ob.width &&
+            player.x + player.width > ob.x &&
+            player.y < ob.y + ob.height &&
+            player.y + player.height > ob.y) {
+          gameOver = true;
+        }
+      });
+
+      if (player.x < baba.x + baba.width &&
+          player.x + player.width > baba.x &&
+          player.y < baba.y + baba.height &&
+          player.y + player.height > baba.y) {
+        gameOver = true;
+      }
+
+      drawRect(player);
+      drawRect(baba);
+
+      if (!gameOver) {
+        frame++;
+        requestAnimationFrame(update);
+      } else {
+        ctx.fillStyle = \"red\";
+        ctx.font = \"40px sans-serif\";
+        ctx.fillText(\"ゲームオーバー！\", 250, 200);
+      }
+    }
+
+    update();
+  </script>
+</body>
+</html>
