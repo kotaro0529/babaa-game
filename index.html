@@ -4,15 +4,51 @@
   <meta charset="UTF-8" />
   <title>近所のババアゲーム</title>
   <style>
-    body { margin: 0; background: #eee; }
-    canvas { display: block; margin: auto; background: #fff; border: 2px solid #333; }
+    body {
+      margin: 0;
+      background: #eee;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #fff;
+      border: 2px solid #333;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 10;
+    }
+    #stageDisplay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
+  <div id="controls">スペースキーでジャンプ！ババアから逃げろ！</div>
+  <div id="stageDisplay">ステージ: 1</div>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <audio id="bgm" src="bgm.mp3" autoplay loop></audio>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+
+    const bgm = document.getElementById("bgm");
+    const stageDisplay = document.getElementById("stageDisplay");
 
     let player = { x: 100, y: 300, width: 40, height: 40, color: "blue", vy: 0, jumping: false };
     let baba = { x: 0, y: 300, width: 40, height: 40, color: "pink" };
@@ -21,6 +57,8 @@
     let obstacles = [];
     let frame = 0;
     let gameOver = false;
+    let stage = 1;
+    let babaSpeed = 1.5;
 
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && !player.jumping) {
@@ -38,6 +76,14 @@
       obstacles.push({ x: 800, y: 320, width: 30, height: 30, color: "gray" });
     }
 
+    function updateStage() {
+      if (frame % 1000 === 0 && stage < 10) {
+        stage++;
+        babaSpeed += 0.5;
+        stageDisplay.textContent = "ステージ: " + stage;
+      }
+    }
+
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -48,7 +94,7 @@
         player.jumping = false;
       }
 
-      if (baba.x < player.x - 80) baba.x += 1.5;
+      if (baba.x < player.x - 80) baba.x += babaSpeed;
 
       if (frame % 120 === 0) createObstacle();
 
@@ -77,6 +123,8 @@
       drawRect(player);
       drawRect(baba);
 
+      updateStage();
+
       if (!gameOver) {
         frame++;
         requestAnimationFrame(update);
@@ -84,7 +132,13 @@
         ctx.fillStyle = "red";
         ctx.font = "40px sans-serif";
         ctx.fillText("ゲームオーバー！", 250, 200);
+        stopBGM();
       }
+    }
+
+    function stopBGM() {
+      bgm.pause();
+      bgm.currentTime = 0;
     }
 
     update();
